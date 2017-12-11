@@ -222,6 +222,9 @@ SeqIO.write(output_seqs, out_proteins, "fasta")
 
 
 
+# and then run through ete3
+
+
 
 
 
