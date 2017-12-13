@@ -1,0 +1,35 @@
+
+Warning Notice!
+
+You are accessing a U.S. Government information system which includes this
+computer, network, and all attached devices. This system is for
+Government-authorized use only. Unauthorized use of this system may result in
+disciplinary action and civil and criminal penalties. System users have no
+expectation of privacy regarding any communications or data processed by this
+system. At any time, the government may monitor, record, or seize any
+communication or data transiting or stored on this information system.
+
+-------------------------------------------------------------------------------
+
+Welcome to the NCBI rsync server.
+
+
+receiving incremental file list
+GCA_000203835.1_ASM20383v1/
+GCA_000203835.1_ASM20383v1/GCA_000203835.1_ASM20383v1_assembly_report.txt
+GCA_000203835.1_ASM20383v1/GCA_000203835.1_ASM20383v1_assembly_stats.txt
+GCA_000203835.1_ASM20383v1/GCA_000203835.1_ASM20383v1_cds_from_genomic.fna.gz
+GCA_000203835.1_ASM20383v1/GCA_000203835.1_ASM20383v1_feature_table.txt.gz
+GCA_000203835.1_ASM20383v1/GCA_000203835.1_ASM20383v1_genomic.fna.gz
+GCA_000203835.1_ASM20383v1/GCA_000203835.1_ASM20383v1_genomic.gbff.gz
+GCA_000203835.1_ASM20383v1/GCA_000203835.1_ASM20383v1_genomic.gff.gz
+GCA_000203835.1_ASM20383v1/GCA_000203835.1_ASM20383v1_protein.faa.gz
+GCA_000203835.1_ASM20383v1/GCA_000203835.1_ASM20383v1_protein.gpff.gz
+GCA_000203835.1_ASM20383v1/GCA_000203835.1_ASM20383v1_rna_from_genomic.fna.gz
+GCA_000203835.1_ASM20383v1/README.txt
+GCA_000203835.1_ASM20383v1/annotation_hashes.txt
+GCA_000203835.1_ASM20383v1/assembly_status.txt
+GCA_000203835.1_ASM20383v1/md5checksums.txt
+
+sent 299 bytes  received 19,736,109 bytes  7,894,563.20 bytes/sec
+total size is 19,731,921  speedup is 1.00
