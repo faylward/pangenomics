@@ -1,12 +1,13 @@
+#!/home/frankaylward/anaconda_ete/bin/
 import argparse
 import os
 import sys
 import subprocess
 import re
 import shlex
-import pandas
-import glob
-import operator
+#import pandas
+#import glob
+#import operator
 from collections import defaultdict
 from Bio import SeqIO
 
@@ -148,7 +149,7 @@ args_parser.add_argument('-d', '--db', required=True, help='Database for matchin
 args_parser = args_parser.parse_args()
 
 # set up object names for input/output/database folders
-output_dir = args_parser.output_folder
+#output_dir = args_parser.output_folder
 input_dir = args_parser.input_folder
 db = args_parser.db
 db_path = os.path.join("hmm/", db+".hmm")
@@ -169,11 +170,12 @@ for i in list_file.readlines():
 ################ run functions ############
 ###########################################
 
+cutoff_dict = {}
 if "checkm" in db:
 	cutoff = "--cut_nc"
 else:
 	cutoff = " "
-	cutoff_file = open("/hmm/embl_cutoffs.txt", "r")
+	cutoff_file = open("hmm/embl_cutoffs.txt", "r")
 	for i in cutoff_file.readlines():
 		line = i.rstrip()
 		tabs = line.split("\t")
@@ -227,7 +229,7 @@ tally = []
 tally2 = []
 for n in cogs:
 	protein_list = cog_dict[n]
-	print protein_list
+	#print protein_list
 	for i in protein_list:
 		acc = acc_dict[i]
 		acc2 = re.sub("_", ".", acc)
