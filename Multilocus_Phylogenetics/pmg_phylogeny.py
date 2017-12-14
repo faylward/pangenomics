@@ -20,18 +20,33 @@ o.close()
 #########################################
 ### define prodigal launcher function ###
 #########################################
+suffix = ".fa"
 def predict_genes(folder):
 	for filenames in os.listdir(folder):
-		if filenames.endswith(".fna"):
+		if filenames.endswith(suffix):
 			#print "Predicting genes..."
 			input_file = os.path.join(folder, filenames)
-			protein_file = re.sub(".fna", ".faa", input_file)
-			gff_file = re.sub(".fna", ".gff", input_file)
+			protein_file = re.sub(suffix, ".faa", input_file)
+			gff_file = re.sub(suffix, ".gff", input_file)
+			acc = re.sub(suffix, "", input_file)
 
 			cmd = "prodigal -i "+ input_file +" -f gff -o "+ gff_file +" -a "+ protein_file 
 			#print cmd
 			cmd2 = shlex.split(cmd)
 			subprocess.call(cmd2, stdout=open("LOGFILE.txt", 'w'), stderr=open("LOGFILE.txt", 'a'))
+
+			# make protein names non-redundant
+			output_seqs = []
+			handle = open(protein_file, "r")
+			for record in SeqIO.parse(handle, "fasta"):
+				name = record.id
+				record.id = acc +".."+ name
+				output_seqs.append(record)
+
+			handle.close()
+			output = open(protein_file, "w")
+			SeqIO.write(output_seqs, output, "fasta")
+
 # end
 
 #######################################
@@ -102,10 +117,9 @@ def hmm_parser(folder, suffix, output):
 					bit_score = list1[5]
 					score = float(bit_score)
 
-					if score > 0:
-						if score > bit_dict[ids]:
-							hit_dict[ids] = hit
-							bit_dict[ids] = score
+					if score > bit_dict[ids]:
+						hit_dict[ids] = hit
+						bit_dict[ids] = score
 
 			bit_sorted = sorted(bit_dict.items(), key=operator.itemgetter(1), reverse=True)
 			output_list = []
@@ -124,7 +138,6 @@ def hmm_parser(folder, suffix, output):
 				cog = tabs[1]
 				score = tabs[2]
 				nr = acc +"_"+ cog
-				#acc2 = taxon_dict2[acc]
 
 				if nr in done:
 					combined_output.write(ids +"\t"+ acc +"\t"+ cog +"\t"+ score +"\tNH\t"+ "\n")
@@ -143,14 +156,16 @@ def hmm_parser(folder, suffix, output):
 ########################################################################
 args_parser = argparse.ArgumentParser(description="Script for identifying phylogenetic marker genes (PMGs) in sequencing data\nFrank O. Aylward, Assistant Professor, Virginia Tech Department of Biological Sciences <faylward at vt dot edu>", epilog="Virginia Tech Department of Biological Sciences")
 args_parser.add_argument('-i', '--input_folder', required=True, help='Input folder of FNA sequence files')
-#args_parser.add_argument('-o', '--output_folder', required=True, help='output folder.')
+args_parser.add_argument('-c', '--cogs', required=True, help='output file for the COGs file, used in ete3')
+args_parser.add_argument('-o', '--output_faa', required=True, help='amino acid fasta output file of the PMGs identified')
 args_parser.add_argument('-f', '--genes', type=bool, default=False, const=True, nargs='?', help='Implies genes have already been predicted, and .faa files are already in the input folder)')
 args_parser.add_argument('-d', '--db', required=True, help='Database for matching. Accepted sets are "embl", "checkm_bact", or "checkm_arch"')
 args_parser = args_parser.parse_args()
 
 # set up object names for input/output/database folders
-#output_dir = args_parser.output_folder
 input_dir = args_parser.input_folder
+cogs_file = args_parser.cogs
+faa_out = args_parser.output_faa
 db = args_parser.db
 db_path = os.path.join("hmm/", db+".hmm")
 
@@ -184,7 +199,7 @@ else:
 		cutoff_dict[name] = float(value)
 
 print "Running HMMER3..."
-run_hmmer(input_dir, db_path, cutoff)
+#run_hmmer(input_dir, db_path, cutoff)
 df = hmm_parser(input_dir, ".hmm_out", "all_hmm_out.txt")
 
 # this is old code to output an annotation table- it may be useful in some cases but isn't part of the core code. 
@@ -222,8 +237,8 @@ for j in hmm_out.readlines():
 			cog_dict[cog].append(protein)
 #print cog_dict
 
-cog_file = hmm_out = open("cog_file.txt", "w")
-out_proteins = open("proteins_for_phylogeny.faa", "w")
+cog_file = hmm_out = open(cogs_file, "w")
+out_proteins = open(faa_out, "w")
 output_seqs = []
 tally = []
 tally2 = []
@@ -235,16 +250,18 @@ for n in cogs:
 		acc2 = re.sub("_", ".", acc)
 		new_name = acc2 +"_"+ n
 		cog_file.write(new_name +"\t")
+		tally.append(new_name)
 
 		record = seq_dict[i]
+		record.description = record.id
 		record.id = new_name
-		record.description = ""
 		output_seqs.append(record)
+		tally2.append(record.id)
 
 	cog_file.write("\n")
 
 SeqIO.write(output_seqs, out_proteins, "fasta")
-
+print len(tally), len(tally2), len(set(tally)), len(set(tally2))
 
 
 # and then run through ete3 using the command "ete3 build -a proteins_for_phylogeny.faa --cogs cog_file.txt -w standard_trimmed_fasttree -m sptree_fasttree_90 --clearall -C 8 -o test_tree"
