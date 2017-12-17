@@ -23,7 +23,10 @@ o.close()
 suffix = ".fa"
 def predict_genes(folder):
 	for filenames in os.listdir(folder):
-		if filenames.endswith(suffix):
+		if filenames.endswith(".fna") or filenames.endswith(".fa"):
+			s = filenames.split(".")
+			suffix = "."+s[-1]
+
 			#print "Predicting genes..."
 			input_file = os.path.join(folder, filenames)
 			protein_file = re.sub(suffix, ".faa", input_file)
@@ -35,13 +38,22 @@ def predict_genes(folder):
 			cmd2 = shlex.split(cmd)
 			subprocess.call(cmd2, stdout=open("LOGFILE.txt", 'w'), stderr=open("LOGFILE.txt", 'a'))
 
+
+def make_nr(folder):
+	for filenames in os.listdir(folder):
+		if filenames.endswith(".faa"):
+
+			protein_file = os.path.join(folder, filenames)
+			acc1 = re.sub(".faa", "", filenames)
+			acc = re.sub("_protein", "", acc1)
+
 			# make protein names non-redundant
 			output_seqs = []
 			handle = open(protein_file, "r")
 			for record in SeqIO.parse(handle, "fasta"):
 				name = record.id
 				record.id = acc +".."+ name
-				print record.id, acc, filenames, name
+				#print record.id, acc, filenames, name
 				output_seqs.append(record)
 
 			handle.close()
@@ -160,7 +172,8 @@ args_parser.add_argument('-i', '--input_folder', required=True, help='Input fold
 args_parser.add_argument('-c', '--cogs', required=True, help='output file for the COGs file, used in ete3')
 args_parser.add_argument('-o', '--output_faa', required=True, help='amino acid fasta output file of the PMGs identified')
 args_parser.add_argument('-f', '--genes', type=bool, default=False, const=True, nargs='?', help='Implies genes have already been predicted, and .faa files are already in the input folder)')
-args_parser.add_argument('-d', '--db', required=True, help='Database for matching. Accepted sets are "embl", "checkm_bact", or "checkm_arch"')
+args_parser.add_argument('-n', '--nr', type=bool, default=False, const=True, nargs='?', help='Implies genes are already non-redundant and no re-naming is necessary)')
+args_parser.add_argument('-d', '--db', required=True, help='Database for matching. Accepted sets are "embl", "checkm_bact", "checkm_arch", "rpl1_arch", "rpl1_bact", or "rpl2"')
 args_parser = args_parser.parse_args()
 
 # set up object names for input/output/database folders
@@ -170,12 +183,21 @@ faa_out = args_parser.output_faa
 db = args_parser.db
 db_path = os.path.join("hmm/", db+".hmm")
 
+######## Check if genes have already been predicted.
 if not (args_parser.genes):
-	print "Predicting genes..."
+	print "\nPredicting genes...\n"
 	predict_genes(input_dir)
 else:
-	print "Genes already predicted. Will look for .faa files for HMMER3..."
+	print "\nGenes already predicted.\n"
 
+####### Check if predicted proteins should be made non-redundant
+if not (args_parser.nr):
+	print "\nMaking protein entries non-redundant...\n"
+	make_nr(input_dir)
+else:
+	print "\nGenes already non-redundant.\n"
+
+###### Get a list of the HMM entries that should be used
 cogs = []
 list_file = open(os.path.join("hmm/", db+".list"), "r")
 for i in list_file.readlines():
@@ -255,6 +277,7 @@ for n in cogs:
 
 		record = seq_dict[i]
 		record.description = record.id
+		#record.description = ""
 		record.id = new_name
 		output_seqs.append(record)
 		tally2.append(record.id)
