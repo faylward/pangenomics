@@ -52,8 +52,12 @@ def make_nr(folder):
 			handle = open(protein_file, "r")
 			for record in SeqIO.parse(handle, "fasta"):
 				name = record.id
-				record.id = acc +".."+ name
-				#print record.id, acc, filenames, name
+				if ".." in name:
+					pass
+				else:
+					record.id = acc +".."+ name
+					#print record.id, acc, filenames, name
+
 				output_seqs.append(record)
 
 			handle.close()
@@ -74,19 +78,22 @@ def run_hmmer(folder, db_path, cutoff):
 
 			cmd = cmd = "hmmsearch --cpu 16 --tblout " + hmm_out + " "+ cutoff +" --domtblout "+ dom_out + " " + db_path + " " + input_file
 			cmd2 = shlex.split(cmd)
-			subprocess.call(cmd2, stdout=open("LOGFILE.txt", 'w'), stderr=open("LOGFILE.txt", 'a'))
+			#subprocess.call(cmd2, stdout=open("LOGFILE.txt", 'w'), stderr=open("LOGFILE.txt", 'a'))
 # end
 
 ######################################
 ######## get protein dictionary ######
 ######################################
-def parse_faa(folder):
+def parse_faa(folder, dictionary):
 	seq_dict = {}
 	for filenames in os.listdir(folder):
 		if filenames.endswith(".faa"):
 			input_file = os.path.join(folder, filenames)
 			for j in SeqIO.parse(input_file, "fasta"):
-				seq_dict[j.id] = j
+				#print j.id
+				if j.id in dictionary:
+					#print j.id
+					seq_dict[j.id] = j
 	return seq_dict
 # end
 
@@ -94,6 +101,7 @@ def parse_faa(folder):
 #### define HMM output parser ######
 ####################################
 def hmm_parser(folder, suffix, output):
+	full_hit_dict = {}
 	cog_dict = defaultdict(list)
 	score_list = {}
 	prot_list = []
@@ -110,6 +118,7 @@ def hmm_parser(folder, suffix, output):
 			f = open(folder+"/"+filenames, 'r')
 			hit_dict = {}
 			bit_dict = defaultdict(int)
+			#bit_dict = {}
 			hit_type = {}
 			marker_dict = {}
 
@@ -138,7 +147,13 @@ def hmm_parser(folder, suffix, output):
 			output_list = []
 			for item in bit_sorted:
 				entry = item[0]
-				output_list.append(entry +"\t"+ str(hit_dict[entry]) +"\t"+ str(bit_dict[entry]))
+				if entry in hit_dict:
+					#if entry in bit_dict and entry in hit_dict:
+					output_list.append(entry +"\t"+ str(hit_dict[entry]) +"\t"+ str(bit_dict[entry]))
+					full_hit_dict[entry] = entry
+					#print entry
+				#else:
+				#	print entry
 
 			#parsed = open(folder+"/"+filenames+".parsed", 'r')
 			hit_profile = defaultdict(int)
@@ -159,9 +174,9 @@ def hmm_parser(folder, suffix, output):
 					combined_output.write(ids +"\t"+ acc +"\t"+ cog +"\t"+ score +"\tBH\t"+ "\n")
 					done.append(nr)
 
-			s1 = pandas.DataFrame(pandas.Series(hit_profile, name = acc))
-			df = pandas.concat([df, s1], axis=1)
-	return df
+			#s1 = pandas.DataFrame(pandas.Series(hit_profile, name = acc))
+			#df = pandas.concat([df, s1], axis=1)
+	return full_hit_dict
 # end
 
 ########################################################################
@@ -221,9 +236,12 @@ else:
 		value = tabs[1]
 		cutoff_dict[name] = float(value)
 
-print "Running HMMER3..."
+print "Running HMMER3...\n"
 run_hmmer(input_dir, db_path, cutoff)
-df = hmm_parser(input_dir, ".hmm_out", "all_hmm_out.txt")
+
+print "Parsing HMMER3 outputs...\n"
+all_hits = hmm_parser(input_dir, ".hmm_out", "all_hmm_out.txt")
+#print all_hits
 
 # this is old code to output an annotation table- it may be useful in some cases but isn't part of the core code. 
 #name2 = 'hmm_profile.speci.txt'
@@ -231,12 +249,14 @@ df = hmm_parser(input_dir, ".hmm_out", "all_hmm_out.txt")
 #df2 = speci_df.transpose()
 #df2.to_csv(name2, sep='\t')
 
+print "Getting protein dictionary...\n"
 # get a dictionary that links protein IDs to their SeqIO records
-seq_dict = parse_faa(input_dir)
+seq_dict = parse_faa(input_dir, all_hits)
 
 ###########################################################################
 ######### Final compilation of files for input to ete3 ####################
 ###########################################################################
+print "Final compilation...\n"
 hmm_out = open("all_hmm_out.txt", "r")
 acc_dict = {}
 cog_dict = defaultdict(list)
