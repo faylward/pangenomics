@@ -1,3 +1,10 @@
+
+############################################################################################
+##### This script computes pairwise homology between proteins in two genomes using LAST ####
+##### It requires that LAST is installed and can be called from the working directory.  ####
+##### Usage: pairwise_lastp.py <input_folder> <output_folder>                           ####
+############################################################################################
+
 import os, sys, re, subprocess, shlex
 from collections import defaultdict
 from Bio import SeqIO
@@ -7,6 +14,7 @@ output_folder = sys.argv[2]
 length_dict = {}
 proteins_in_genome = defaultdict(list)
 
+# Iterate through .faa files and make sure that the LAST index files have been computed. 
 folders = os.listdir(input_folder)
 for faa in folders:
 	if faa.endswith(".faa"):
@@ -14,11 +22,12 @@ for faa in folders:
 		db = os.path.join(input_folder, prefix)
 		filepath = os.path.join(input_folder, faa)
 
-		# get length 
+		# get length of each protein and put it in a dictionary. This is used for computing alingment lengths later. 
 		for prot in SeqIO.parse(filepath, "fasta"):
 			length_dict[prot.id] = len(prot.seq)
 			proteins_in_genome[prefix].append(prot.id)
 
+		# If the lastdb is already there, no need to compute it. 
 		lastpath = os.path.join(input_folder, prefix+".suf")
 		if os.path.isfile(lastpath):
 			pass
@@ -28,8 +37,10 @@ for faa in folders:
 			cmd2 = shlex.split(cmd)
 			subprocess.call(cmd2, stdin=open("stdout.txt", "w"), stdout=open("stderr.txt", "w"))
 
+		# Now iterate through all the files again and make the appropriate pairs. 
 		for faa2 in folders:
 			if faa2.endswith(".faa"):
+				# No need to compare genomes to themselves (although that is sometimes done). 
 				if faa == faa2:
 					pass
 				else:
@@ -44,14 +55,15 @@ for faa in folders:
 						cmd2 = shlex.split(cmd)
 						subprocess.call(cmd2, stdin=open("stdout.txt", "w"), stdout=open("stderr.txt", "w"))
 
+					# Now that lastdbs should be available for both the query and the reference, we can run the last command. 
 					output = os.path.join(output_folder, prefix +"__"+ prefix2 +".lastout")
 					cmd = "lastal -P 8 -m 500 "+ db2 +" "+ filepath +" -f BlastTab"
 					print cmd
 					cmd2 = shlex.split(cmd)
 					subprocess.call(cmd2, stdin=open("stderr.txt", "w"), stdout=open(output, "w"))
 
-# Now parse through the outputs and report the best hits to a consolidated file
-fullout = open("last_test.blast-graph", "w")
+# Now that the LAST comparisons have been computed we need to parse through the outputs and report the best hits to a consolidated file
+fullout = open("marinimicrobia.blast-graph", "w")
 bit_dict1  = defaultdict(float)
 eval_dict1 = defaultdict(float)
 bit_dict2  = defaultdict(float)
@@ -87,8 +99,6 @@ for i in os.listdir(output_folder):
 				cov1 = aln / length_dict[hit]
 				cov2 = aln / length_dict[query]
 				queryhit  = query +"__"+ hit
-				#if query == "NP_231118.1":
-				#	print query, hit, bit, perc, evalue, aln, cov1, cov2
 
 				if evalue < 1e-5 and float(cov1) > 0.5 and bit > bit_score[query]*0.95:
 					bit_dict1[queryhit] = bit
@@ -124,7 +134,7 @@ for i in os.listdir(output_folder):
 						bit_score[query] = bit
 						final_list[core].append(queryhit)
 
-#print bit_dict1
+# Now that we have all of the hits in the appropriate dictionaries, we can consolidate and produce a final blast-graph output for proteinortho to use. 
 done = {}
 for lists in final_list:
 	pieces = lists.split("__")
@@ -144,16 +154,10 @@ for lists in final_list:
 			query = pie[0]
 			hit = pie[1]
 			reverse = hit +"__"+ query
-			#fullout.write("# "+query+"\t"+hit+"\n")
 
 			if pair in done or reverse in done:
-				#print pair, reverse
 				pass
 			else:
-
-				#if hit == "NP_229913.1" or query == "NP_229913.1":
-				#	print hit, query, pair, first, second, bit_dict2[reverse], bit_dict1[pair]
-
 				done[pair] = pair
 				done[reverse] = reverse
 				proteins1 = proteins_in_genome[first]
