@@ -16,6 +16,8 @@ proteins_in_genome = defaultdict(list)
 
 # Iterate through .faa files and make sure that the LAST index files have been computed. 
 folders = os.listdir(input_folder)
+# keep an ongoing tally of the comparisons
+tally = 0
 for faa in folders:
 	if faa.endswith(".faa"):
 		prefix = re.sub(".faa", "", faa)
@@ -33,7 +35,7 @@ for faa in folders:
 			pass
 		else:
 			cmd = "lastdb -p "+ db +" "+ filepath
-			print cmd
+			#print cmd
 			cmd2 = shlex.split(cmd)
 			subprocess.call(cmd2, stdin=open("stdout.txt", "w"), stdout=open("stderr.txt", "w"))
 
@@ -58,9 +60,11 @@ for faa in folders:
 					# Now that lastdbs should be available for both the query and the reference, we can run the last command. 
 					output = os.path.join(output_folder, prefix +"__"+ prefix2 +".lastout")
 					cmd = "lastal -P 8 -m 500 "+ db2 +" "+ filepath +" -f BlastTab"
-					print cmd
+					#print cmd
 					cmd2 = shlex.split(cmd)
 					subprocess.call(cmd2, stdin=open("stderr.txt", "w"), stdout=open(output, "w"))
+					tally +=1
+					print prefix, prefix2, tally
 
 # Now that the LAST comparisons have been computed we need to parse through the outputs and report the best hits to a consolidated file
 fullout = open("marinimicrobia.blast-graph", "w")
