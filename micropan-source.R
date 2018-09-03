@@ -1259,7 +1259,9 @@ as.panmat <- function(x) { # y is the proteinortho matrix, newmat is the new mat
 			}
 		}
 	}
-	colnames(newmat) <- colnames(y); row.names(newmat) <- row.names(y)
+	names <- paste("cluster", c(1:dim(y)[1]), sep="_")
+	colnames(newmat) <- colnames(y)
+	row.names(newmat) <- names
 	class(newmat) <- c("Panmat", "matrix")
 	return (t(newmat))
 }
