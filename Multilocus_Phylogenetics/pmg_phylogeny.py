@@ -1,17 +1,12 @@
-#!/home/frankaylward/bin
-import argparse
-import os
-import sys
-import subprocess
-import re
-import shlex
-import pandas
-#import glob
-import operator
+#!/home/frankaylward/anaconda_ete/bin/python
+import argparse, os, sys, subprocess, re, shlex, pandas, operator
 from collections import defaultdict
 from Bio import SeqIO
 
-# This script requires that HMMER3 and Prodigal are install in the PATH. 
+# specify directory where the script is located
+homedir = "/home/frankaylward/Desktop/marker_gene_benchmarking/pangenomics/Multilocus_Phylogenetics"
+
+# This script requires that HMMER3 and Prodigal are installed in the PATH. 
 
 # create and wipe the LOGFILE before beginning
 o = open("LOGFILE.txt", "w")
@@ -23,24 +18,41 @@ o.close()
 suffix = ".fa"
 def predict_genes(folder):
 	for filenames in os.listdir(folder):
-		if filenames.endswith(suffix):
+		if filenames.endswith(".fna") or filenames.endswith(".fa"):
+			s = filenames.split(".")
+			suffix = "."+s[-1]
+
 			#print "Predicting genes..."
 			input_file = os.path.join(folder, filenames)
 			protein_file = re.sub(suffix, ".faa", input_file)
 			gff_file = re.sub(suffix, ".gff", input_file)
-			acc = re.sub(suffix, "", input_file)
+			acc = re.sub(suffix, "", filenames)
 
 			cmd = "prodigal -i "+ input_file +" -f gff -o "+ gff_file +" -a "+ protein_file 
 			#print cmd
 			cmd2 = shlex.split(cmd)
 			subprocess.call(cmd2, stdout=open("LOGFILE.txt", 'w'), stderr=open("LOGFILE.txt", 'a'))
 
+
+def make_nr(folder):
+	for filenames in os.listdir(folder):
+		if filenames.endswith(".faa"):
+
+			protein_file = os.path.join(folder, filenames)
+			acc1 = re.sub(".faa", "", filenames)
+			acc = re.sub("_protein", "", acc1)
+
 			# make protein names non-redundant
 			output_seqs = []
 			handle = open(protein_file, "r")
 			for record in SeqIO.parse(handle, "fasta"):
 				name = record.id
-				record.id = acc +".."+ name
+				if ".." in name:
+					pass
+				else:
+					record.id = acc +".."+ name
+					#print record.id, acc, filenames, name
+
 				output_seqs.append(record)
 
 			handle.close()
@@ -67,13 +79,16 @@ def run_hmmer(folder, db_path, cutoff):
 ######################################
 ######## get protein dictionary ######
 ######################################
-def parse_faa(folder):
+def parse_faa(folder, dictionary):
 	seq_dict = {}
 	for filenames in os.listdir(folder):
 		if filenames.endswith(".faa"):
 			input_file = os.path.join(folder, filenames)
 			for j in SeqIO.parse(input_file, "fasta"):
-				seq_dict[j.id] = j
+				#print j.id
+				if j.id in dictionary:
+					#print j.id
+					seq_dict[j.id] = j
 	return seq_dict
 # end
 
@@ -81,6 +96,7 @@ def parse_faa(folder):
 #### define HMM output parser ######
 ####################################
 def hmm_parser(folder, suffix, output):
+	full_hit_dict = {}
 	cog_dict = defaultdict(list)
 	score_list = {}
 	prot_list = []
@@ -97,6 +113,7 @@ def hmm_parser(folder, suffix, output):
 			f = open(folder+"/"+filenames, 'r')
 			hit_dict = {}
 			bit_dict = defaultdict(int)
+			#bit_dict = {}
 			hit_type = {}
 			marker_dict = {}
 
@@ -125,7 +142,13 @@ def hmm_parser(folder, suffix, output):
 			output_list = []
 			for item in bit_sorted:
 				entry = item[0]
-				output_list.append(entry +"\t"+ str(hit_dict[entry]) +"\t"+ str(bit_dict[entry]))
+				if entry in hit_dict:
+					#if entry in bit_dict and entry in hit_dict:
+					output_list.append(entry +"\t"+ str(hit_dict[entry]) +"\t"+ str(bit_dict[entry]))
+					full_hit_dict[entry] = entry
+					#print entry
+				#else:
+				#	print entry
 
 			#parsed = open(folder+"/"+filenames+".parsed", 'r')
 			hit_profile = defaultdict(int)
@@ -146,9 +169,9 @@ def hmm_parser(folder, suffix, output):
 					combined_output.write(ids +"\t"+ acc +"\t"+ cog +"\t"+ score +"\tBH\t"+ "\n")
 					done.append(nr)
 
-			s1 = pandas.DataFrame(pandas.Series(hit_profile, name = acc))
-			df = pandas.concat([df, s1], axis=1)
-	return df
+			#s1 = pandas.DataFrame(pandas.Series(hit_profile, name = acc))
+			#df = pandas.concat([df, s1], axis=1)
+	return full_hit_dict
 # end
 
 ########################################################################
@@ -159,7 +182,8 @@ args_parser.add_argument('-i', '--input_folder', required=True, help='Input fold
 args_parser.add_argument('-c', '--cogs', required=True, help='output file for the COGs file, used in ete3')
 args_parser.add_argument('-o', '--output_faa', required=True, help='amino acid fasta output file of the PMGs identified')
 args_parser.add_argument('-f', '--genes', type=bool, default=False, const=True, nargs='?', help='Implies genes have already been predicted, and .faa files are already in the input folder)')
-args_parser.add_argument('-d', '--db', required=True, help='Database for matching. Accepted sets are "embl", "checkm_bact", or "checkm_arch"')
+args_parser.add_argument('-n', '--nr', type=bool, default=False, const=True, nargs='?', help='Implies genes are already non-redundant and no re-naming is necessary)')
+args_parser.add_argument('-d', '--db', required=True, help='Database for matching. Accepted sets are "embl", "checkm_bact", "checkm_arch", "rpl1_arch", "rpl1_bact", or "rpl2"')
 args_parser = args_parser.parse_args()
 
 # set up object names for input/output/database folders
@@ -167,16 +191,25 @@ input_dir = args_parser.input_folder
 cogs_file = args_parser.cogs
 faa_out = args_parser.output_faa
 db = args_parser.db
-db_path = os.path.join("hmm/", db+".hmm")
+db_path = os.path.join(homedir, "hmm/", db+".hmm")
 
+######## Check if genes have already been predicted.
 if not (args_parser.genes):
-	print "Predicting genes..."
+	print "Predicting genes...\n"
 	predict_genes(input_dir)
 else:
-	print "Genes already predicted. Will look for .faa files for HMMER3..."
+	print "Genes already predicted.\n"
 
+####### Check if predicted proteins should be made non-redundant
+if not (args_parser.nr):
+	print "Making protein entries non-redundant...\n"
+	make_nr(input_dir)
+else:
+	print "Genes already non-redundant.\n"
+
+###### Get a list of the HMM entries that should be used
 cogs = []
-list_file = open(os.path.join("hmm/", db+".list"), "r")
+list_file = open(os.path.join(homedir, "hmm/", db+".list"), "r")
 for i in list_file.readlines():
 	line = i.rstrip()
 	cogs.append(line)
@@ -184,13 +217,12 @@ for i in list_file.readlines():
 ###########################################
 ################ run functions ############
 ###########################################
-
 cutoff_dict = {}
 if "checkm" in db:
 	cutoff = "--cut_nc"
 else:
 	cutoff = " "
-	cutoff_file = open("hmm/embl_cutoffs.txt", "r")
+	cutoff_file = open(os.path.join(homedir, "hmm/embl_cutoffs.txt"), "r")
 	for i in cutoff_file.readlines():
 		line = i.rstrip()
 		tabs = line.split("\t")
@@ -198,9 +230,12 @@ else:
 		value = tabs[1]
 		cutoff_dict[name] = float(value)
 
-print "Running HMMER3..."
-#run_hmmer(input_dir, db_path, cutoff)
-df = hmm_parser(input_dir, ".hmm_out", "all_hmm_out.txt")
+print "Running HMMER3...\n"
+run_hmmer(input_dir, db_path, cutoff)
+
+print "Parsing HMMER3 outputs...\n"
+all_hits = hmm_parser(input_dir, ".hmm_out", "all_hmm_out.txt")
+#print all_hits
 
 # this is old code to output an annotation table- it may be useful in some cases but isn't part of the core code. 
 #name2 = 'hmm_profile.speci.txt'
@@ -208,12 +243,14 @@ df = hmm_parser(input_dir, ".hmm_out", "all_hmm_out.txt")
 #df2 = speci_df.transpose()
 #df2.to_csv(name2, sep='\t')
 
+print "Getting protein dictionary...\n"
 # get a dictionary that links protein IDs to their SeqIO records
-seq_dict = parse_faa(input_dir)
+seq_dict = parse_faa(input_dir, all_hits)
 
 ###########################################################################
 ######### Final compilation of files for input to ete3 ####################
 ###########################################################################
+print "Final compilation...\n"
 hmm_out = open("all_hmm_out.txt", "r")
 acc_dict = {}
 cog_dict = defaultdict(list)
@@ -242,6 +279,7 @@ out_proteins = open(faa_out, "w")
 output_seqs = []
 tally = []
 tally2 = []
+already_done = {}
 for n in cogs:
 	protein_list = cog_dict[n]
 	#print protein_list
@@ -249,14 +287,25 @@ for n in cogs:
 		acc = acc_dict[i]
 		acc2 = re.sub("_", ".", acc)
 		new_name = acc2 +"_"+ n
-		cog_file.write(new_name +"\t")
-		tally.append(new_name)
+		
+		if new_name in already_done:
+			print n, i, acc, acc2
 
-		record = seq_dict[i]
-		record.description = record.id
-		record.id = new_name
-		output_seqs.append(record)
-		tally2.append(record.id)
+		else:
+			already_done[new_name] = new_name
+
+			#if n == "TIGR01128" and acc == "Marinimicrobia_Bin_45-1":
+			#	print "Original\t", n, i, acc, acc2
+
+			cog_file.write(new_name +"\t")
+			tally.append(new_name)
+
+			record = seq_dict[i]
+			record.description = record.id
+			#record.description = ""
+			record.id = new_name
+			output_seqs.append(record)
+			tally2.append(record.id)
 
 	cog_file.write("\n")
 
