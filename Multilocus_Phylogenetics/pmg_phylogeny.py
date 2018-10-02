@@ -73,7 +73,7 @@ def run_hmmer(folder, db_path, cutoff):
 
 			cmd = cmd = "hmmsearch --cpu 16 --tblout " + hmm_out + " "+ cutoff +" --domtblout "+ dom_out + " " + db_path + " " + input_file
 			cmd2 = shlex.split(cmd)
-			subprocess.call(cmd2, stdout=open("LOGFILE.txt", 'w'), stderr=open("LOGFILE.txt", 'a'))
+		#	subprocess.call(cmd2, stdout=open("LOGFILE.txt", 'w'), stderr=open("LOGFILE.txt", 'a'))
 # end
 
 ######################################
@@ -92,6 +92,17 @@ def parse_faa(folder, dictionary):
 	return seq_dict
 # end
 
+#############################################
+######## get protein length dictionary ######
+#############################################
+def get_length(input_file):
+	seq_dict = {}
+	for j in SeqIO.parse(input_file, "fasta"):
+		seq_dict[j.id] = len(j.seq)
+	return seq_dict
+# end
+
+
 ####################################
 #### define HMM output parser ######
 ####################################
@@ -109,11 +120,13 @@ def hmm_parser(folder, suffix, output):
 	for filenames in os.listdir(folder):
 		if filenames.endswith(suffix):
 
+			protein_file = re.sub(suffix, ".faa", filenames)
+			length_dict = get_length(os.path.join(folder, protein_file))
+
 			acc = re.sub(suffix, "", filenames)
-			f = open(folder+"/"+filenames, 'r')
+			f = open(os.path.join(folder, filenames), 'r')
 			hit_dict = {}
 			bit_dict = defaultdict(int)
-			#bit_dict = {}
 			hit_type = {}
 			marker_dict = {}
 
@@ -159,14 +172,16 @@ def hmm_parser(folder, suffix, output):
 				ids = tabs[0]
 				hits.append(ids)
 				cog = tabs[1]
-				score = tabs[2]
+				score = float(tabs[2])
 				nr = acc +"_"+ cog
 
 				if nr in done:
-					combined_output.write(ids +"\t"+ acc +"\t"+ cog +"\t"+ score +"\tNH\t"+ "\n")
-					#pass
+					#combined_output.write(ids +"\t"+ acc +"\t"+ cog +"\t"+ score +"\tNH\t"+ "\n")
+					pass
 				else:
-					combined_output.write(ids +"\t"+ acc +"\t"+ cog +"\t"+ score +"\tBH\t"+ "\n")
+					#if score >= 0:
+					#print score
+					combined_output.write(ids +"\t"+ acc +"\t"+ cog +"\t"+ str(score) +"\t"+ str(length_dict[ids]) +"\tBH\t"+ "\n")
 					done.append(nr)
 
 			#s1 = pandas.DataFrame(pandas.Series(hit_profile, name = acc))
@@ -257,7 +272,7 @@ cog_dict = defaultdict(list)
 for j in hmm_out.readlines():
 	line = j.rstrip()
 	tabs = line.split("\t")
-	hit_type = tabs[4]
+	hit_type = tabs[5]
 	if hit_type == "BH":
 		protein = tabs[0]
 		acc = tabs[1]
@@ -268,6 +283,10 @@ for j in hmm_out.readlines():
 				acc_dict[protein] = acc
 				#print protein, acc, cog
 				cog_dict[cog].append(protein)
+		elif db == "RNAP":
+			if score >= 10:
+				acc_dict[protein] = acc
+				cog_dict[cog].append(protein)			
 		else:
 			acc_dict[protein] = acc
 			#print protein, acc, cog
