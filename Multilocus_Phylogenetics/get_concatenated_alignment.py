@@ -48,7 +48,7 @@ for i in os.listdir(outfolder):
 		alignment = re.sub(".faa", ".aln", filename)
 		trimmed = re.sub(".faa", ".trimal.aln", filename)
 		cog = re.sub(".faa", "", i)
-		#print filename
+		print "Aligning and trimming "+ cog +" and adding it to the concatenated alignment"
 		cmd = "clustalo --force -i "+ filename +" -o "+ alignment 
 		#print cmd
 		cmd2 = shlex.split(cmd)
@@ -78,7 +78,7 @@ for i in align_dict:
 	outlist.append(record)
 
 SeqIO.write(outlist, output, "fasta")
-
+print "Done"
 
 
 
