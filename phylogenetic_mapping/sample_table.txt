@@ -1,0 +1,173 @@
+DATASET_SYMBOL
+#Symbol datasets allow the display of various symbols on the branches of the tree. For each node, one or more symbols can be defined.
+#Each symbol's color, size and position along the branch can be specified.
+
+#lines starting with a hash are comments and ignored during parsing
+#=================================================================#
+#                    MANDATORY SETTINGS                           #
+#=================================================================#
+#select the separator which is used to delimit the data below (TAB,SPACE or COMMA).This separator must be used throughout this file (except in the SEPARATOR line, which uses space).
+#SEPARATOR TAB
+#SEPARATOR SPACE
+SEPARATOR COMMA
+
+#label is used in the legend table (can be changed later)
+DATASET_LABEL,example symbols
+
+#dataset color (can be changed later)
+COLOR,#ffff00
+
+#=================================================================#
+#                    OPTIONAL SETTINGS                            #
+#=================================================================#
+
+#each dataset can have a legend, which is defined below
+#for each row in the legend, there should be one shape, color and label
+#shape should be a number between 1 and 6:
+#1: square
+#2: circle
+#3: star
+#4: right pointing triangle
+#5: left pointing triangle
+#6: checkmark
+
+#LEGEND_TITLE,Dataset legend
+#LEGEND_SHAPES,1,2,3
+#LEGEND_COLORS,#ff0000,#00ff00,#0000ff
+#LEGEND_LABELS,value1,value2,value3
+
+#=================================================================#
+#     all other optional settings can be set or changed later     #
+#           in the web interface (under 'Datasets' tab)           #
+#=================================================================#
+
+#largest symbol will be displayed with this size, others will be proportionally smaller.
+MAXIMUM_SIZE,50
+
+
+#Internal tree nodes can be specified using IDs directly, or using the 'last common ancestor' method described in iTOL help pages
+#=================================================================#
+#       Actual data follows after the "DATA" keyword              #
+#=================================================================#
+#the following fields are required for each node:
+#ID,symbol,size,color,fill,position,label
+#symbol should be a number between 1 and 5:
+#1: rectangle
+#2: circle
+#3: star
+#4: right pointing triangle
+#5: left pointing triangle
+#6: checkmark
+
+#size can be any number. Maximum size in the dataset will be displayed using MAXIMUM_SIZE, while others will be proportionally smaller
+#color can be in hexadecimal, RGB or RGBA notation. If RGB or RGBA are used, dataset SEPARATOR cannot be comma.
+#fill can be 1 or 0. If set to 0, only the outline of the symbol will be displayed.
+#position is a number between 0 and 1 and defines the position of the symbol on the branch (for example, position 0 is exactly at the start of node branch, position 0.5 is in the middle, and position 1 is at the end)
+
+DATA
+#Examples
+
+#internal node will have a red filled circle in the middle of the branch
+#9606|184922,2,10,#ff0000,1,0.5.5
+
+#node 100379 will have a blue star outline at the start of the branch, half the size of the circle defined above (size is 5 compared to 10 above)
+#100379,2,5,#0000ff,1,0.5
+#node 100379 will also have a filled green rectangle in the middle of the branch, same size as the circle defined above (size is 10)
+#100379,1,10,#00ff00,1,0.5.5
+LGRX01003475.1_4,2,1.0,#0000ff,1,0.5
+AOM63514.1_HaV_01,2,115.0,#0000ff,1,0.5
+BEGY01000096.1_66,2,20.0,#0000ff,1,0.5
+Node45,2,1.0,#0000ff,1,0.5
+Node14,2,298.0,#0000ff,1,0.5
+5J7V_B_ncbi_Faus,2,7.0,#0000ff,1,0.5
+Node16,2,181.0,#0000ff,1,0.5
+Node17,2,80.0,#0000ff,1,0.5
+AGH30888.1_MpV_12T,2,10.0,#0000ff,1,0.5
+Node18,2,2.0,#0000ff,1,0.5
+Faunusvirus|Faunusvirus_27_2_Faun,2,14.0,#0000ff,1,0.5
+ADO67376.1_CroV,2,114.0,#0000ff,1,0.5
+Node19,2,17.0,#0000ff,1,0.5
+AAS18087.1_Sgirid,2,1.0,#0000ff,1,0.5
+AUL78147.1_Tupan,2,9.0,#0000ff,1,0.5
+BDDA01000005.1_180,2,69.0,#0000ff,1,0.5
+Node51,2,59.0,#0000ff,1,0.5
+AEQ32869.1_Mchil,2,2.0,#0000ff,1,0.5
+CCV02096.1_Iirid,2,68.0,#0000ff,1,0.5
+Node52,2,2.0,#0000ff,1,0.5
+Node23,2,17.0,#0000ff,1,0.5
+gene_66_LCMiAC02_1_LCC02,2,44.0,#0000ff,1,0.5
+JTEE01000022.1_505,2,41.0,#0000ff,1,0.5
+Node24,2,6.0,#0000ff,1,0.5
+ARF11179.1_Klo,2,16.0,#0000ff,1,0.5
+Node25,2,1.0,#0000ff,1,0.5
+gene_55_LCMiAC02_1_LCC02,2,12.0,#0000ff,1,0.5
+BEGY01000127.1_150,2,15.0,#0000ff,1,0.5
+gene_77_LCMiAC02_1_LCC02,2,7.0,#0000ff,1,0.5
+Node26,2,3.0,#0000ff,1,0.5
+ATZ80571.1_Bsal,2,21.0,#0000ff,1,0.5
+Node34,2,2.0,#0000ff,1,0.5
+Node13,2,95.0,#0000ff,1,0.5
+Node27,2,5.0,#0000ff,1,0.5
+ARF09335.1_Cato,2,5.0,#0000ff,1,0.5
+Node5,2,87.0,#0000ff,1,0.5
+Hyperionvirus_19_21_Hype,2,27.0,#0000ff,1,0.5
+Node28,2,28.0,#0000ff,1,0.5
+KN714637.1_12,2,72.0,#0000ff,1,0.5
+AAA65311.1_Asfv,2,1.0,#0000ff,1,0.5
+Node29,2,4.0,#0000ff,1,0.5
+Node1,2,4942.0,#0000ff,1,0.5
+Node64,2,863.0,#0000ff,1,0.5
+Node60,2,3.0,#0000ff,1,0.5
+Node32,2,9.0,#0000ff,1,0.5
+CAI65508.2_EhV86,2,31.0,#0000ff,1,0.5
+CAY39753.1_OtV-1,2,25.0,#0000ff,1,0.5
+Node15,2,175.0,#0000ff,1,0.5
+Node3,2,86.0,#0000ff,1,0.5
+AAK14534.1_EsV-1,2,11.0,#0000ff,1,0.5
+ALH23097.1_Cev,2,326.0,#0000ff,1,0.5
+Node4,2,13.0,#0000ff,1,0.5
+Node63,2,2227.0,#0000ff,1,0.5
+ADX05938.1_OLPV_1,2,253.0,#0000ff,1,0.5
+Node37,2,4.0,#0000ff,1,0.5
+Node7,2,12.0,#0000ff,1,0.5
+PGGS01000882.1_18,2,7.0,#0000ff,1,0.5
+AET73005.1_PgV12T,2,203.0,#0000ff,1,0.5
+AII17119.1_AaV,2,133.0,#0000ff,1,0.5
+AUF82093.1_TetV_1,2,15.0,#0000ff,1,0.5
+JTEE01000022.1_639..JTEE01000022.1_638,2,2.0,#0000ff,1,0.5
+AAC96798.1_PBCV_1,2,16.0,#0000ff,1,0.5
+Node39,2,103.0,#0000ff,1,0.5
+LGRX01003475.1_3,2,49.0,#0000ff,1,0.5
+PGGS01002369.1_1,2,3.0,#0000ff,1,0.5
+Node40,2,61.0,#0000ff,1,0.5
+Node41,2,29.0,#0000ff,1,0.5
+BDSK01001778.1_6..BDSK01001778.1_5,2,3.0,#0000ff,1,0.5
+LGRX01022762.1_2,2,19.0,#0000ff,1,0.5
+CCA61376.1_Dpasc_4a,2,2.0,#0000ff,1,0.5
+NSMO01014316.1_178,2,4.0,#0000ff,1,0.5
+LGRX01032895.1_3..LGRX01032895.1_2,2,39.0,#0000ff,1,0.5
+PGGS01000007.1_420,2,6.0,#0000ff,1,0.5
+Node48,2,13.0,#0000ff,1,0.5
+Node49,2,1.0,#0000ff,1,0.5
+BDDC01000222.1_51,2,7.0,#0000ff,1,0.5
+Node33,2,36.0,#0000ff,1,0.5
+Node9,2,4.0,#0000ff,1,0.5
+ACH46811.1_FsV,2,1.0,#0000ff,1,0.5
+Node20,2,20.0,#0000ff,1,0.5
+Node10,2,6.0,#0000ff,1,0.5
+Node50,2,19.0,#0000ff,1,0.5
+Node38,2,3.0,#0000ff,1,0.5
+Node21,2,1.0,#0000ff,1,0.5
+Node35,2,1.0,#0000ff,1,0.5
+ABF82044.1_Atirid,2,13.0,#0000ff,1,0.5
+LGRX01033037.1_2,2,28.0,#0000ff,1,0.5
+Node30,2,92.0,#0000ff,1,0.5
+ADO18196.2_APMV,2,10.0,#0000ff,1,0.5
+Node61,2,1.0,#0000ff,1,0.5
+Node31,2,23.0,#0000ff,1,0.5
+Node22,2,29.0,#0000ff,1,0.5
+ABU23714.1_PoV,2,167.0,#0000ff,1,0.5
+ALD62149.1_Msib,2,3.0,#0000ff,1,0.5
+gene_3_LCMAC202_18_LC202,2,6.0,#0000ff,1,0.5
+Node2,2,38.0,#0000ff,1,0.5
+
