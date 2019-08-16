@@ -15,7 +15,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import IUPAC
 
 working_dir = sys.argv[1]
-info = open("taxa.final.txt", "r")
+info = open("ncldv_downloads.txt", "r")
 speci_db = "hmm/RNAP.full.hmm"
 #speci_db = "hmm/all.hmm"
 
@@ -43,10 +43,11 @@ for j in info:
 	ftp = tabs[17]
 	slash = ftp.split("/")
 	name = slash[9]
-	tax = [x for i,x in enumerate(tabs) if i in [7, 20, 21, 22, 23]]
+	tax = [x for i,x in enumerate(tabs) if i in [6, 20, 21, 23, 24]]
 
 	taxonomic = "\t".join(tax)
 	taxon_dict[name] = taxonomic
+	print name, taxonomic
 
 marker_tally = defaultdict(int)
 exceptions = open("exceptions.txt", "w")
@@ -64,7 +65,8 @@ def hmm_launcher(folder):
 			speci_dom_output = os.path.join(folder, dom_output)
 
 			# run against the RNAP models
-			cmd = "hmmsearch --cpu 16 --cut_tc --domtblout "+ speci_dom_output +" "+ speci_db + " " + input_file
+			cmd = "hmmsearch --cpu 16 -E 1e-5 --domtblout "+ speci_dom_output +" "+ speci_db + " " + input_file
+			print cmd
 			cmd2 = shlex.split(cmd)
 			subprocess.call(cmd2, stdout=open("hmm.out", 'w'), stderr=open("error_file.txt", 'a'))
 
@@ -152,10 +154,10 @@ def hmm_parser(folder, suffix, output):
 				nr = acc +"_"+ cog
 
 				if nr in done:
-					combined_output.write(ids +"\t"+ acc +"\t"+ cog +"\t"+ start +"\t"+ end +"\t"+ aln_length +"\t"+ score +"\tNH\n")
+					combined_output.write(ids +"\t"+ acc +"\t"+ cog +"\t"+ start +"\t"+ end +"\t"+ aln_length +"\t"+ score +"\tNH\t"+taxon_dict[acc]+"\n")
 					o.write(ids +"\t"+ acc +"\t"+ cog +"\t"+ start +"\t"+ end +"\t"+ score +"\tNH\n")
 				else:
-					combined_output.write(ids +"\t"+ acc +"\t"+ cog +"\t"+ start +"\t"+ end +"\t"+ aln_length +"\t"+ score +"\tBH\n")
+					combined_output.write(ids +"\t"+ acc +"\t"+ cog +"\t"+ start +"\t"+ end +"\t"+ aln_length +"\t"+ score +"\tBH\t"+taxon_dict[acc]+"\n")
 					o.write(ids +"\t"+ acc +"\t"+ cog +"\t"+ start +"\t"+ end +"\t"+ score +"\tBH\n")
 					done.append(nr)
 			o.close()
@@ -242,7 +244,7 @@ for i in os.listdir(working_dir):
 		# parse domout file and get protein hits and coordinates
 		for cog in cog_set:
 			protein2dups = defaultdict(lambda:"single_besthit")
-			merged = open("output.txt", "a")
+			merged = open("full_output.txt", "a")
 			# merged = open("RNAP.faa", "a")
 
 			rnap, protein2cog, protein2acc, protein2score, protein2length, protein2category, protein2coords, protein2align_length = parse_domout(parsed, acc, seq_dict, cog)
