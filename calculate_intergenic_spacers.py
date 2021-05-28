@@ -6,25 +6,28 @@ import shlex
 from collections import defaultdict
 import numpy as np
 
-input_folder = "/home/frankaylward/Desktop/marker_gene_benchmarking/Marinimicrobia/all_genomes/gff/"
-output = open("intergenic_spacers.txt", "w")
+input_folder = sys.argv[1]
+output = open(sys.argv[2], "w")
+output.write("genome\tnum_spacers\tmean_len\tmedian_len\tminimum_len\tmaximum_len\n")
 
 for i in os.listdir(input_folder):
 	if i.endswith(".gff"):
 		gff = os.path.join(input_folder, i)
-		#print(i)
+		print(i)
 		infile = open(gff, "r")
 		tuples = defaultdict(list)
 		for j in infile.readlines():
-			if j.startswith("#"):
+			if j.startswith("##FASTA"):
+				break
+			elif j.startswith("#"):
 				pass
 			else:
 				line = j.rstrip()
 				tabs = line.split("\t")
+				#print(tabs)
 				contig = tabs[0]
 				start = int(tabs[3])
 				end = int(tabs[4])
-
 				tuples[contig].append((start, end))
 
 		full_list = []
@@ -35,19 +38,21 @@ for i in os.listdir(input_folder):
 				start = n[0]
 				end = n[1]
 				
-				#if prev_end > 0:
-				diff = abs(start - prev_end)
-				prev_end = end
-
-				if diff > 1000:
-					pass
+				diff = start - prev_end
+				
+				if diff < 0:
+					full_list.append(0)
 				else:
 					full_list.append(diff)
+					
+				prev_end = end
+				#full_list.append(diff)
 
 		full_list.pop(0)
 		avint = np.mean(full_list)
-		output.write(i +"\t"+ str(avint) +"\n")
-
-				
-
+		median = np.median(full_list)
+		mini = min(full_list)
+		maxi = max(full_list)
+		#print(full_list)
+		output.write(i +"\t"+ str(len(full_list)) +"\t"+ str(round(avint, 1)) +"\t"+ str(median) +"\t"+ str(mini) +"\t"+ str(maxi) +"\n")
 
