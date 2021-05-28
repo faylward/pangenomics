@@ -1,2 +1,2 @@
 # pangenomics
-This repo contains various code for pangenomic analysis of Bacteria and Archaea that is under development.
+This repo contains various utilities for pangenomic analysis of Bacteria and Archaea.
